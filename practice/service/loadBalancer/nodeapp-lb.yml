@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodeapp-deploy
+spec:
+  selector:
+    matchLabels:
+      app: nodeapp-pod
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nodeapp-pod 
+    spec:
+      containers:
+      - name: nodeapp-container
+        image: dangtong/nodeapp
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeapp-lb
+  annotations:  # AWS 라서 추가 
+    service.beta.kubernetes.io/aws-load-balancer-type: external           # k8s 밖의 igw에 연결되어 있다 
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip      # ip 통신을 한다 
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing  # 외부와 통신한다 
+spec:
+  type: LoadBalancer
+  selector:
+    app: nodeapp-pod
+  ports:
+  - port: 80
+    targetPort: 8080
